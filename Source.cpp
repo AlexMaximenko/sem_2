@@ -132,7 +132,7 @@ int main()
 		size_t a, b;
 		std::cin >> a;
 		std::cin >> b;
-		g.addEdge(a-1, b-1);
+		g.addEdge(a - 1, b - 1);
 	}
 	for (int i = 0; i < n; i++)
 	{
