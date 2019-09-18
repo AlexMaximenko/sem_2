@@ -1,9 +1,8 @@
 #include<iostream>
 #include<vector>
-#include<queue>
 
-//Вершина - числа, идущие подряд
-//Изначально знаем количество вершин
+
+// Задача "Светофоры", http://acmp.ru/index.asp?main=task&id_task=124
 
 class Graph
 {
@@ -20,7 +19,7 @@ public:
 		return vertex_count_;
 	}
 
-	size_t geEdgeCount() const
+	size_t getEdgeCount() const
 	{
 		return edge_count_;
 	}
@@ -31,14 +30,12 @@ public:
 	{
 		edge_count_++;
 	}
+	virtual size_t getNeighborsCount(const Vertex& v) const = 0;
 
 protected:
 	bool is_directed_;
 	size_t vertex_count_,
-		   edge_count_;
-
-
-
+		edge_count_;
 };
 
 
@@ -50,24 +47,22 @@ public:
 		Graph(vertex_count, is_directed)
 	{
 		adj_list_ = std::vector<std::vector<Vertex>>(vertex_count);
-
 	}
 
-	void addEdge(const Vertex& start, const Vertex& finish) override
+	void addEdge(const Vertex& start, const Vertex& finish)
 	{
-		
+		Graph::addEdge(start, finish);
 		adj_list_[start].push_back(finish);
 		if (!is_directed_)
 			adj_list_[finish].push_back(start);
-		edge_count_++;
 	}
 
-	std::vector<Vertex> getNeighbors(const Vertex& v) const
+	std::vector<Vertex> getNeighbors(const Vertex& v) const override
 	{
 		return adj_list_[v];
 	}
 
-	int getNeighborsCount(const Vertex&  v) const
+	size_t getNeighborsCount(const Vertex&  v) const override
 	{
 		return adj_list_[v].size();
 	}
@@ -88,38 +83,6 @@ private:
 	std::vector<std::vector<Vertex>> adj_list_;
 };
 
-namespace GraphProcessing 
-{
-	enum VertexMark
-	{
-		white, grey, black
-	};
-
-	typedef size_t Vertex;
-	/*std::vector<std::vector<Vertex>> getConnectedComponents(const Graph& g) // Каждая компонента связности - отдельный вектор
-	{
-		std::vector<VertexMark> vertex_marks(g.getVertexCount(), white);
-		std::vector < std::vector<Vertex>> components;
-
-		for (Vertex v = 0; v < g.getVertexCount(); v++)
-			if (vertex_marks[v] == white)
-			{
-				components.push_back(std::vector<Vertex>(0));
-				dfs(g, v, vertex_marks, components[components.size() - 1]);
-
-			}
-					
-	}
-
-	void dfs(const Graph&, const Vertex& v, std::vector<VertexMark>& vertex_marks, std::vector<Vertex>& component)
-	{
-
-	}*/
-
-
-
-}
-
 int main()
 {
 	int n, m;
@@ -128,7 +91,6 @@ int main()
 	GraphAdjList g(n, false);
 	for (size_t i = 0; i < m; i++)
 	{
-		
 		size_t a, b;
 		std::cin >> a;
 		std::cin >> b;
@@ -136,8 +98,6 @@ int main()
 	}
 	for (int i = 0; i < n; i++)
 	{
-			std::cout << g.getNeighborsCount(i) << " ";
+		std::cout << g.getNeighborsCount(i) << " ";
 	}
-	//g.printGraph();
-
 }
