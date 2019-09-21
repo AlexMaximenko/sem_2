@@ -55,7 +55,7 @@ public:
 	{
 		Graph::addEdge(start, finish);
 		adj_matrix_[start][finish] = 1;
-		if (!is_directed_) adj_matrix_[finish][start];
+		if (!is_directed_) adj_matrix_[finish][start] = 1;
 	}
 
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
