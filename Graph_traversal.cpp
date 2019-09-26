@@ -103,33 +103,31 @@ private:
 
 namespace GraphProcessing 
 {
-	enum VertexMark
+	enum VERTEXMARK
 	{
-		white, grey, black
+		WHITE, GREY, BLACK
 	};
 
-	typedef size_t Vertex;
 	
-	void dfs_visit(const Graph& g, const Vertex& v, size_t& counter, std::vector<VertexMark>& vertex_marks)
+	void dfs_visit(const Graph& g, const size_t& v, size_t& counter, std::vector<VERTEXMARK>& vertex_marks)
 	{
 		counter++;
-		vertex_marks[v] = grey;
-		for (Vertex i : g.getNeighbors(v))
+		vertex_marks[v] = GREY;
+		for (size_t i : g.getNeighbors(v))
 		{
-			if (vertex_marks[i] == white)
+			if (vertex_marks[i] == WHITE)
 			{
-				vertex_marks[i] = grey;
 				dfs_visit(g, i, counter, vertex_marks);
-				vertex_marks[i] = black;
+				vertex_marks[i] = BLACK;
 			}
 		}
 
 	}
 	
 	
-	void getConnectedCount(const Graph& g, const Vertex& v, size_t& counter)
+	void getConnectedCount(const Graph& g, const size_t& v, size_t& counter)
 	{
-		std::vector<VertexMark> vertex_marks(g.getVertexCount(), white);
+		std::vector<VERTEXMARK> vertex_marks(g.getVertexCount(), WHITE);
 		dfs_visit(g, v, counter, vertex_marks);
 	}
 
@@ -151,7 +149,7 @@ int main()
 		}
 	}
 	size_t answer = 0;
-	GraphProcessing::getConnectedCount(g, v-1, answer);
+	GraphProcessing::getConnectedCount(g, v - 1, answer);
 	std::cout << answer;
 	
 
