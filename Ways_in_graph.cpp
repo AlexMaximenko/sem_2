@@ -1,8 +1,10 @@
 #include<iostream>
 #include<vector>
 #include<queue>
+#include<deque>
 // Ways in graph "https://informatics.mccme.ru/mod/statements/view.php?id=255#1"
 
+#define WASNT_VISIT -1
 class Graph
 {
 public:
@@ -55,7 +57,6 @@ public:
 	{
 		Graph::addEdge(start, finish);
 		adj_matrix_[start][finish] = 1;
-		if (!is_directed_) adj_matrix_[finish][start] = 1;
 	}
 
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
@@ -88,22 +89,36 @@ namespace GraphProcessing
 
 	typedef size_t Vertex;
 
-	std::pair<int, std::vector<Vertex>> getShortestWay(const Graph& g, const Vertex& start, const Vertex& finish)
+	std::deque<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
 	{
-		std::vector<int> distance(g.getVertexCount(), -1);
-		std::vector<Vertex> prev(g.getVertexCount(), -1);
+		std::deque<Vertex> way;
+		way.push_front(finish);
+		Vertex cur = finish;
+		while (prev[cur] != WASNT_VISIT)
+		{
+			cur = prev[cur];
+			way.push_front(cur);
+		}
+		return way;
+
+	}
+
+	std::pair<int, std::deque<Vertex>> getShortestWay(const Graph& g, const Vertex& start, const Vertex& finish)
+	{
+		std::vector<int> distance(g.getVertexCount(), WASNT_VISIT);
+		std::vector<Vertex> prev(g.getVertexCount(), WASNT_VISIT);
 		distance[start] = 0;
-		prev[start] = -1;
+		prev[start] = WASNT_VISIT;
 
 		std::queue<Vertex> qu;
 		qu.push(start);
-		while (!qu.empty()) 
+		while (!qu.empty())
 		{
 			Vertex cur = qu.front();
 			qu.pop();
-			for (auto i : g.getNeighbors(cur))
+			for (Vertex i : g.getNeighbors(cur))
 			{
-				if (distance[i] == -1)
+				if (distance[i] == WASNT_VISIT)
 				{
 					distance[i] = distance[cur] + 1;
 					prev[i] = cur;
@@ -111,18 +126,14 @@ namespace GraphProcessing
 				}
 			}
 		}
-		if (distance[finish] == -1)
-			return std::make_pair(-1, std::vector<Vertex>(0));
-		std::vector<Vertex> way;
-		way.push_back(finish);
-		Vertex cur = finish;
-		while (prev[cur] != -1)
+		if (distance[finish] == WASNT_VISIT)
 		{
-			cur = prev[cur];
-			way.push_back(cur);
+			return std::make_pair(WASNT_VISIT, std::deque<Vertex>(0));
 		}
-		return std::make_pair(distance[finish], way);
+		
+		return std::make_pair(distance[finish], getWay(prev, finish));
 	}
+	
 }
 
 
@@ -143,18 +154,17 @@ int main()
 	}
 	size_t start, finish;
 	std::cin >> start >> finish;
-	std::pair<int, std::vector<size_t>> answer = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
-	if (answer.first == -1)
-		std::cout << -1;
+	std::pair<int, std::deque<size_t>> answer = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
+	if (answer.first == WASNT_VISIT)
+		std::cout << WASNT_VISIT;
 	else
-		if (answer.first == 0)
-			std::cout << 0;
-		else
 		{
 			std::cout << answer.first << "\n";
-			for (int i = answer.second.size() - 1; i >= 0; i--)
-				std::cout << answer.second[i] + 1 << " ";
+			if (answer.first > 0)
+			{
+				for (size_t i : answer.second)
+					std::cout << i + 1 << " ";
+			}
 		}
-
 	return 0;
 }
