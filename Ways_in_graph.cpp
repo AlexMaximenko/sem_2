@@ -89,21 +89,21 @@ namespace GraphProcessing
 
 	typedef size_t Vertex;
 
-	std::deque<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
+	std::vector<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
 	{
-		std::deque<Vertex> way;
-		way.push_front(finish);
+		std::vector<Vertex> way;
+		way.insert(way.begin(), finish);
 		Vertex cur = finish;
 		while (prev[cur] != WASNT_VISIT)
 		{
 			cur = prev[cur];
-			way.push_front(cur);
+			way.insert(way.begin(), cur);
 		}
 		return way;
 
 	}
 
-	std::pair<int, std::deque<Vertex>> getShortestWay(const Graph& g, const Vertex& start, const Vertex& finish)
+	std::vector<Vertex> getShortestWay(const Graph& g, const Vertex& start, const Vertex& finish)
 	{
 		std::vector<int> distance(g.getVertexCount(), WASNT_VISIT);
 		std::vector<Vertex> prev(g.getVertexCount(), WASNT_VISIT);
@@ -128,10 +128,10 @@ namespace GraphProcessing
 		}
 		if (distance[finish] == WASNT_VISIT)
 		{
-			return std::make_pair(WASNT_VISIT, std::deque<Vertex>(0));
+			return  std::vector<Vertex>(0);
 		}
 		
-		return std::make_pair(distance[finish], getWay(prev, finish));
+		return getWay(prev, finish);
 	}
 	
 }
@@ -154,17 +154,20 @@ int main()
 	}
 	size_t start, finish;
 	std::cin >> start >> finish;
-	std::pair<int, std::deque<size_t>> answer = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
-	if (answer.first == WASNT_VISIT)
-		std::cout << WASNT_VISIT;
+	std::vector<size_t> answer = GraphProcessing::getShortestWay(g, start-1, finish-1);
+	if (answer.size() == 0)
+	{
+		std::cout << -1;
+	}
 	else
+	{
+		std::cout << answer.size() - 1 << std::endl;
+		if (answer.size() != 1)
 		{
-			std::cout << answer.first << "\n";
-			if (answer.first > 0)
-			{
-				for (size_t i : answer.second)
-					std::cout << i + 1 << " ";
-			}
+			for (size_t i : answer)
+				std::cout << i + 1 << " ";
 		}
+	}
+		
 	return 0;
 }
