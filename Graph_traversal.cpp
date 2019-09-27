@@ -54,14 +54,22 @@ public:
 	{
 		Graph::addEdge(start, finish);
 		adj_matrix_[start][finish] = 1;
+		if (is_directed_)
+		{
+			adj_matrix_[finish][start] = 1;
+		}
 	}
 
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
 	{
 		std::vector<Vertex> neighbors;
 		for (size_t i = 0; i < vertex_count_; i++)
+		{
 			if (adj_matrix_[v][i])
+			{
 				neighbors.push_back(i);
+			}
+		}
 		return neighbors;
 	}
 
@@ -103,17 +111,17 @@ private:
 
 namespace GraphProcessing 
 {
-	enum VERTEXMARK
+	enum VertexMark
 	{
 		WHITE, GREY, BLACK
 	};
 
 	
-	void dfs_visit(const Graph& g, const size_t& v, size_t& counter, std::vector<VERTEXMARK>& vertex_marks)
+	void dfs_visit(const Graph& g, const size_t& vertex, size_t& counter, std::vector<VertexMark>& vertex_marks)
 	{
 		counter++;
-		vertex_marks[v] = GREY;
-		for (size_t i : g.getNeighbors(v))
+		vertex_marks[vertex] = GREY;
+		for (size_t i : g.getNeighbors(vertex))
 		{
 			if (vertex_marks[i] == WHITE)
 			{
@@ -125,10 +133,10 @@ namespace GraphProcessing
 	}
 	
 	
-	void getConnectedCount(const Graph& g, const size_t& v, size_t& counter)
+	void CountVerticesInConnectivityComponent(const Graph& g, const size_t& vertex, size_t& counter)
 	{
-		std::vector<VERTEXMARK> vertex_marks(g.getVertexCount(), WHITE);
-		dfs_visit(g, v, counter, vertex_marks);
+		std::vector<VertexMark> vertex_marks(g.getVertexCount(), WHITE);
+		dfs_visit(g, vertex, counter, vertex_marks);
 	}
 
 }
