@@ -4,7 +4,7 @@
 #include<deque>
 // Ways in graph "https://informatics.mccme.ru/mod/statements/view.php?id=255#1"
 
-#define WASNT_VISIT -1
+
 class Graph
 {
 public:
@@ -62,17 +62,26 @@ public:
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
 	{
 		std::vector<Vertex> neighbors;
-		for (size_t i = 0; i < vertex_count_; i++)
-			if (adj_matrix_[v][i])
-				neighbors.push_back(i);
+		for (size_t neighbor = 0; i < vertex_count_; i++)
+		{
+			if (adj_matrix_[v][neighbor])
+			{
+				neighbors.push_back(neighbor);
+			}
+		}
 		return neighbors;
 	}
 
 	size_t getNeighborsCount(const Vertex&  v) const override
 	{
 		size_t count = 0;
-		for (auto i : adj_matrix_[v])
-			count += i;
+		for (Vertex u = 0; u < vertex_count; u++) 
+		{
+			if (adj_matrix_[v][u])
+			{
+				count++;
+			}
+		}
 		return count;
 	}
 
@@ -82,26 +91,32 @@ private:
 
 namespace GraphProcessing
 {
+	namespace
+	{
+		std::vector<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
+		{
+			std::vector<Vertex> way;
+			way.insert(way.begin(), finish);
+			Vertex cur = finish;
+			while (prev[cur] != WASNT_VISIT)
+			{
+				cur = prev[cur];
+				way.insert(way.begin(), cur);
+			}
+			return way;
+
+		}
+	}
 	enum VertexMark
 	{
-		white, grey, black
+		WHITE, GREY, BLACK
 	};
 
 	typedef size_t Vertex;
 
-	std::vector<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
-	{
-		std::vector<Vertex> way;
-		way.insert(way.begin(), finish);
-		Vertex cur = finish;
-		while (prev[cur] != WASNT_VISIT)
-		{
-			cur = prev[cur];
-			way.insert(way.begin(), cur);
-		}
-		return way;
+	const int WASNT_VISIT = -1;
 
-	}
+	
 
 	std::vector<Vertex> getShortestWay(const Graph& g, const Vertex& start, const Vertex& finish)
 	{
@@ -146,10 +161,12 @@ int main()
 	{
 		for (size_t j = 0; j < n; j++)
 		{
-			size_t a;
-			std::cin >> a;
-			if (a)
+			size_t is_edge;
+			std::cin >> is_edge;
+			if (is_edge)
+			{
 				g.addEdge(i, j);
+			}
 		}
 	}
 	size_t start, finish;
