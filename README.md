@@ -1,1 +1,1 @@
-# sem_2
+# Seminars
