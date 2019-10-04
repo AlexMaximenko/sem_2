@@ -22,7 +22,12 @@ public:
 
 	virtual std::vector<Vertex> getNeighbors(const Vertex& v) const = 0;
 
-	virtual void addEdge(const Vertex& start, const Vertex& finish) = 0;
+	virtual void addEdge(const Vertex& start, const Vertex& finish)
+	{
+		edge_count_++;
+	}
+
+	virtual size_t getNeighborsCount(const Vertex& v) const = 0;
 
 protected:
 	bool is_directed_;
