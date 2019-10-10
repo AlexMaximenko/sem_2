@@ -151,9 +151,9 @@ int main()
 	{
 		for (size_t j = 0; j < n; j++)
 		{
-			size_t a;
-			std::cin >> a;
-			if (a)
+			size_t is_neighbor;
+			std::cin >> is_edge;
+			if (is_edge == IS_EDGE)
 				g.addEdge(i, j);
 		}
 	}
