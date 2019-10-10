@@ -1,7 +1,8 @@
 #include<iostream>
 #include<vector>
 #include<queue>
-#include<deque>
+#define NO_EDGE 0
+#define IS_EDGE 1
 // Ways in graph "https://informatics.mccme.ru/mod/statements/view.php?id=255#1"
 
 
@@ -49,22 +50,22 @@ public:
 	GraphAdjMatrix(const size_t vertex_count, bool is_directed) :
 		Graph(vertex_count, is_directed)
 	{
-		adj_matrix_ = std::vector<std::vector<int>>(vertex_count, std::vector<int>(vertex_count, 0));
+		adj_matrix_ = std::vector<std::vector<int>>(vertex_count, std::vector<int>(vertex_count, NO_EDGE));
 
 	}
 
 	void addEdge(const Vertex& start, const Vertex& finish) override
 	{
 		Graph::addEdge(start, finish);
-		adj_matrix_[start][finish] = 1;
+		adj_matrix_[start][finish] = IS_EDGE;
 	}
 
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
 	{
 		std::vector<Vertex> neighbors;
-		for (size_t neighbor = 0; i < vertex_count_; i++)
+		for (Vertex neighbor = 0; i < vertex_count_; i++)
 		{
-			if (adj_matrix_[v][neighbor])
+			if (adj_matrix_[v][neighbor] == IS_EDGE)
 			{
 				neighbors.push_back(neighbor);
 			}
@@ -77,7 +78,7 @@ public:
 		size_t count = 0;
 		for (Vertex u = 0; u < vertex_count; u++) 
 		{
-			if (adj_matrix_[v][u])
+			if (adj_matrix_[v][u] == IS_EDGE)
 			{
 				count++;
 			}
@@ -171,7 +172,7 @@ int main()
 	}
 	size_t start, finish;
 	std::cin >> start >> finish;
-	std::vector<size_t> answer = GraphProcessing::getShortestWay(g, start-1, finish-1);
+	std::vector<size_t> answer = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
 	if (answer.size() == 0)
 	{
 		std::cout << -1;
