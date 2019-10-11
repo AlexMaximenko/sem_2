@@ -17,7 +17,9 @@ public:
 		Graph::addEdge(start, finish);
 		adj_list_[start].push_back(finish);
 		if (!is_directed_)
+		{
 			adj_list_[finish].push_back(start);
+		}
 	}
 
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
@@ -34,14 +36,14 @@ public:
 	{
 		std::cout << "Print\n";
 		std::cout << vertex_count_;
-		for (size_t i = 0; i < vertex_count_; i++)
+		for (Vertex i = 0; i < vertex_count_; i++)
 		{
-			for (auto k : adj_list_[i])
+			for (Vertex k : adj_list_[i])
 				std::cout << k << " ";
 			std::cout << std::endl;
 		}
 	}
 
 private:
-	std::vector<std::vector<Vertex>> adj_list_;
+	std::vector<std::vector<Vertex> adj_list_;
 };
