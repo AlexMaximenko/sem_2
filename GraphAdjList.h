@@ -12,7 +12,7 @@ public:
 		adj_list_ = std::vector<std::vector<Vertex>>(vertex_count);
 	}
 
-	void addEdge(const Vertex& start, const Vertex& finish)
+	virtual void addEdge(const Vertex& start, const Vertex& finish, const int weight = 0)
 	{
 		Graph::addEdge(start, finish);
 		adj_list_[start].push_back(finish);
