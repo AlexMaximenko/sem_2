@@ -154,7 +154,9 @@ int main()
 			size_t is_neighbor;
 			std::cin >> is_edge;
 			if (is_edge == IS_EDGE)
+			{
 				g.addEdge(i, j);
+			}
 		}
 	}
 	std::cout << GraphProcessing::getComponentSize(g, v - 1);
