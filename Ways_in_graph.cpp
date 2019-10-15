@@ -63,7 +63,7 @@ public:
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
 	{
 		std::vector<Vertex> neighbors;
-		for (Vertex neighbor = 0; i < vertex_count_; i++)
+		for (Vertex neighbor = 0; neighbor < vertex_count_; neighbor++)
 		{
 			if (adj_matrix_[v][neighbor] == IS_EDGE)
 			{
@@ -76,7 +76,7 @@ public:
 	size_t getNeighborsCount(const Vertex&  v) const override
 	{
 		size_t count = 0;
-		for (Vertex u = 0; u < vertex_count; u++) 
+		for (Vertex u = 0; u < vertex_count_; u++)
 		{
 			if (adj_matrix_[v][u] == IS_EDGE)
 			{
@@ -92,33 +92,35 @@ private:
 
 namespace GraphProcessing
 {
-	namespace
-	{
-		std::vector<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
-		{
-			std::vector<Vertex> way;
-			way.insert(way.begin(), finish);
-			Vertex cur = finish;
-			while (prev[cur] != WASNT_VISIT)
-			{
-				cur = prev[cur];
-				way.insert(way.begin(), cur);
-			}
-			return way;
-
-		}
-	}
 	enum VertexMark
 	{
 		WHITE, GREY, BLACK
 	};
 
 	typedef size_t Vertex;
-
 	const int WASNT_VISIT = -1;
 
-	
+	namespace
+	{
+		std::vector<Vertex> getWay(const std::vector<Vertex>& prev, const Vertex& finish)
+		{
+			std::vector<Vertex> reverse_way;
+			std::vector<Vertex> way;
+			reverse_way.push_back(finish);
+			Vertex cur = finish;
+			while (prev[cur] != WASNT_VISIT)
+			{
+				cur = prev[cur];
+				reverse_way.push_back(cur);
+			}
+			for (size_t i = 0; i < reverse_way.size(); ++i)
+			{
+				way.push_back(reverse_way[reverse_way.size() - i - 1]);
+			}
+			return way;
 
+		}
+	}
 	std::vector<Vertex> getShortestWay(const Graph& g, const Vertex& start, const Vertex& finish)
 	{
 		std::vector<int> distance(g.getVertexCount(), WASNT_VISIT);
@@ -146,10 +148,10 @@ namespace GraphProcessing
 		{
 			return  std::vector<Vertex>(0);
 		}
-		
+
 		return getWay(prev, finish);
 	}
-	
+
 }
 
 
@@ -172,20 +174,20 @@ int main()
 	}
 	size_t start, finish;
 	std::cin >> start >> finish;
-	std::vector<size_t> answer = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
-	if (answer.size() == 0)
+	std::vector<Graph::Vertex> shortest_way = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
+	if (shortest_way.size() == 0)
 	{
 		std::cout << -1;
 	}
 	else
 	{
-		std::cout << answer.size() - 1 << std::endl;
-		if (answer.size() != 1)
+		std::cout << shortest_way.size() - 1 << std::endl;
+		if (shortest_way.size() != 1)
 		{
-			for (size_t i : answer)
+			for (size_t i : shortest_way)
 				std::cout << i + 1 << " ";
 		}
 	}
-		
+
 	return 0;
 }
