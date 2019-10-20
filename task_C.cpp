@@ -80,13 +80,12 @@ namespace GraphProcessing
 	{
 		WHITE, BLACK, GREY
 	};
-	typedef size_t Vertex;
-	const int WASNT_VISIT = 2000000;
+	const int WASNT_VISIT = -1;
 	
-	void dfs_visit(const Graph& g, const size_t& vertex, std::vector<VertexMark>& vertex_marks, std::vector<Vertex>& previous, Vertex& cycle_start)
+	void dfs_visit(const Graph& g, const Graph::Vertex& vertex, std::vector<VertexMark>& vertex_marks, std::vector<Graph::Vertex>& previous, Graph::Vertex& cycle_start)
 	{
 		vertex_marks[vertex] = GREY;
-		for (Vertex neighbor : g.getNeighbors(vertex))
+		for (Graph::Vertex neighbor : g.getNeighbors(vertex))
 		{
 			if (vertex_marks[neighbor] == WHITE)
 			{
@@ -110,12 +109,12 @@ namespace GraphProcessing
 		vertex_marks[vertex] = BLACK;
 	}
 	
-	std::vector<Vertex> getCycle(const Graph& g)
+	std::vector<Graph::Vertex> getCycle(const Graph& g)
 	{
-		std::vector<Vertex> previous(g.getVertexCount(), WASNT_VISIT); 
+		std::vector<Graph::Vertex> previous(g.getVertexCount(), WASNT_VISIT);
 		std::vector<VertexMark> vertex_marks(g.getVertexCount(), WHITE);
-		Vertex cycle_start = WASNT_VISIT;
-		for (Vertex v = 0; v < g.getVertexCount(); ++v)
+		Graph::Vertex cycle_start = WASNT_VISIT;
+		for (Graph::Vertex v = 0; v < g.getVertexCount(); ++v)
 		{
 			if (vertex_marks[v] == WHITE)
 			{
@@ -128,11 +127,11 @@ namespace GraphProcessing
 		}
 		if (cycle_start == WASNT_VISIT)
 		{
-			return std::vector<Vertex>(0);
+			return std::vector<Graph::Vertex>(0);
 		}
-		std::vector<Vertex> cycle;
+		std::vector<Graph::Vertex> cycle;
 		cycle.push_back(previous[cycle_start]);
-		Vertex current = previous[cycle_start];
+		Graph::Vertex current = previous[cycle_start];
 		while (current != cycle_start)
 		{
 			cycle.push_back(previous[current]);
