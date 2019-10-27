@@ -61,7 +61,7 @@ struct field
 		}
 		if (y >= 1)
 		{
-			correct_neighbors.push_back({ x, y - 1});
+			correct_neighbors.push_back({ x, y - 1 });
 		}
 		if (x + 1 < size_x)
 		{
@@ -152,7 +152,7 @@ namespace GraphProcessing
 	};
 	const field WASNT_VISIT(-1, -1);
 	const size_t INF = -1;
-	
+
 	std::vector<std::vector<size_t>> getTable(const Graph& g, const std::vector<std::vector<size_t>>& input_table)
 	{
 		size_t size_x = input_table.size();
