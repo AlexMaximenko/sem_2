@@ -97,14 +97,14 @@ namespace GraphProcessing
 	};
 	const int WASNT_VISIT = -1;
 
-	void dfs_visit_1(const Graph& g, const Graph::Vertex& vertex, std::vector<size_t>& finish_time, std::vector<VertexMark>& vertex_marks, size_t& time, std::vector<Graph::Vertex>& order)
+	void dfsForOrder(const Graph& g, const Graph::Vertex& vertex, std::vector<size_t>& finish_time, std::vector<VertexMark>& vertex_marks, size_t& time, std::vector<Graph::Vertex>& order)
 	{
 		vertex_marks[vertex] = GREY;
 		for (Graph::Vertex neighbor : g.getNeighbors(vertex))
 		{
 			if (vertex_marks[neighbor] == WHITE)
 			{
-				dfs_visit_1(g, neighbor, finish_time, vertex_marks, time, order);
+				dfsForOrder(g, neighbor, finish_time, vertex_marks, time, order);
 			}
 		}
 		vertex_marks[vertex] = BLACK;
@@ -112,50 +112,50 @@ namespace GraphProcessing
 		order.push_back(vertex);
 	}
 
-	void dfs_visit_2(const Graph& transposed_g, const Graph::Vertex& vertex, std::vector<VertexMark>& vertex_marks, const size_t component_number, std::vector<Graph::Vertex>& vertices)
+	void setComponentNumber(const Graph& transposed_g, const Graph::Vertex& vertex, std::vector<VertexMark>& vertex_marks, const size_t component_count, std::vector<Graph::Vertex>& vertex_component_number)
 	{
 		vertex_marks[vertex] = GREY;
-		vertices[vertex] = component_number;
+		vertex_component_number[vertex] = component_count;
 		for (Graph::Vertex neighbor : transposed_g.getNeighbors(vertex))
 		{
 			if (vertex_marks[neighbor] == WHITE)
 			{
-				dfs_visit_2(transposed_g, neighbor, vertex_marks, component_number, vertices);
+				setComponentNumber(transposed_g, neighbor, vertex_marks, component_count, vertex_component_number);
 			}
 		}
 		vertex_marks[vertex] = BLACK;
 	}
-	
-	void dfs(const Graph& g, std::vector<size_t>& finish_time, std::vector<VertexMark>& vertex_marks, size_t& time, std::vector<Graph::Vertex>& order)
+
+	void setCorrectOrder(const Graph& g, std::vector<size_t>& finish_time, std::vector<VertexMark>& vertex_marks, size_t& time, std::vector<Graph::Vertex>& order)
 	{
 		for (Graph::Vertex v = 0; v < g.getVertexCount(); ++v)
 		{
 			if (vertex_marks[v] == WHITE)
 			{
-				dfs_visit_1(g, v, finish_time, vertex_marks, time, order);
+				dfsForOrder(g, v, finish_time, vertex_marks, time, order);
 			}
 		}
 	}
-	size_t determineComponents(const Graph& g, const Graph& transposed_g, std::vector<Graph::Vertex>& vertices)
+	size_t determineComponents(const Graph& g, const Graph& transposed_g, std::vector<Graph::Vertex>& vertex_component_number)
 	{
 		size_t time = 0;
 		std::vector<size_t> finish_time(g.getVertexCount(), WASNT_VISIT);
 		std::vector<VertexMark> vertex_marks(g.getVertexCount(), WHITE);
 		std::vector<Graph::Vertex> order;
-		dfs(g, finish_time, vertex_marks, time, order);	//output time ordering
+		setCorrectOrder(g, finish_time, vertex_marks, time, order);	//output time ordering
 		vertex_marks.clear();
 		vertex_marks = std::vector<VertexMark>(g.getVertexCount(), WHITE);
-		size_t component_number = 0;
+		size_t component_count = 0;
 		for (size_t i = 0; i < g.getVertexCount(); i++)			//dfs for transposed graph
 		{
 			Graph::Vertex current = order[g.getVertexCount() - i - 1];
 			if (vertex_marks[current] == WHITE)
 			{
-				component_number++;
-				dfs_visit_2(transposed_g, current, vertex_marks, component_number, vertices);
+				component_count++;
+				setComponentNumber(transposed_g, current, vertex_marks, component_count, vertex_component_number);
 			}
 		}
-		return component_number;
+		return component_count;
 	}
 }
 
@@ -172,9 +172,9 @@ int main()
 		g.addEdge(from - 1, to - 1);
 		transoped_g.addEdge(to - 1, from - 1);
 	}
-	std::vector<Graph::Vertex> vertices(g.getVertexCount(), 0);
-	std::cout << GraphProcessing::determineComponents(g, transoped_g, vertices) << std::endl;
-	for (Graph::Vertex i : vertices)
+	std::vector<Graph::Vertex> vertex_component_number(g.getVertexCount(), 0);
+	std::cout << GraphProcessing::determineComponents(g, transoped_g, vertex_component_number) << std::endl;
+	for (Graph::Vertex i : vertex_component_number)
 	{
 		std::cout << i << " ";
 	}
