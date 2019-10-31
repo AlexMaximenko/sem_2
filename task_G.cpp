@@ -98,12 +98,13 @@ namespace GraphProcessing
 		WHITE, GREY, BLACK
 	};
 	const int WASNT_VISIT = -1;
-
+	const int INF = -1;
+	typedef std::vector<Graph::Vertex> PATH;
 	namespace
 	{
 		std::vector<Graph::Vertex> getWay(const std::vector<Graph::Vertex>& prev, const Graph::Vertex & finish)
 		{
-			std::vector<Graph::Vertex> way;
+			PATH way;
 			way.push_back(finish);
 			Graph::Vertex cur = finish;
 			while (prev[cur] != WASNT_VISIT)
@@ -115,9 +116,9 @@ namespace GraphProcessing
 			return way;
 		}
 	}
-	std::vector<Graph::Vertex> getShortestWay(const Graph& g, const Graph::Vertex& start, const Graph::Vertex& finish)
+	PATH getShortestWay(const Graph& g, const Graph::Vertex& start, const Graph::Vertex& finish)
 	{
-		std::vector<int> distance(g.getVertexCount(), WASNT_VISIT);
+		std::vector<int> distance(g.getVertexCount(), INF);
 		std::vector<Graph::Vertex> prev(g.getVertexCount(), WASNT_VISIT);
 		distance[start] = 0;
 		prev[start] = WASNT_VISIT;
@@ -129,7 +130,7 @@ namespace GraphProcessing
 			qu.pop();
 			for (Graph::Vertex i : g.getNeighbors(cur))
 			{
-				if (distance[i] == WASNT_VISIT)
+				if (distance[i] == INF)
 				{
 					distance[i] = distance[cur] + 1;
 					prev[i] = cur;
@@ -137,9 +138,9 @@ namespace GraphProcessing
 				}
 			}
 		}
-		if (distance[finish] == WASNT_VISIT)
+		if (distance[finish] == INF)
 		{
-			return  std::vector<Graph::Vertex>(0);
+			return  PATH(0);
 		}
 		return getWay(prev, finish);
 	}
@@ -158,7 +159,7 @@ int main()
 		std::cin >> from >> to;
 		g.addEdge(from - 1, to - 1);
 	}
-	std::vector<Graph::Vertex> shortest_way = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
+	GraphProcessing::PATH shortest_way = GraphProcessing::getShortestWay(g, start - 1, finish - 1);
 	if (shortest_way.size() == 0)
 	{
 		std::cout << -1;
@@ -168,7 +169,9 @@ int main()
 		std::cout << shortest_way.size() - 1 << std::endl;
 		{
 			for (Graph::Vertex i : shortest_way)
+			{
 				std::cout << i + 1 << " ";
+			}
 		}
 	}
 
