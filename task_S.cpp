@@ -114,15 +114,18 @@ private:
 };
 namespace GraphProcessing
 {
-	const size_t INF = -1;
-	void Relax(const Edge& edge, std::vector<int>& distance)
+	namespace
 	{
-		if (distance[edge.getTo()] > distance[edge.getFrom()] + edge.getWeight())
+		const size_t INF = -1;
+		void Relax(const Edge& edge, std::vector<int>& distance)
 		{
-			distance[edge.getTo()] = distance[edge.getFrom()] + edge.getWeight();
+			if (distance[edge.getTo()] > distance[edge.getFrom()] + edge.getWeight())
+			{
+				distance[edge.getTo()] = distance[edge.getFrom()] + edge.getWeight();
+			}
 		}
 	}
-	std::vector<int> FordBellman(const Graph& g, Graph::Vertex source)
+	std::vector<int> findDistances(const Graph& g, Graph::Vertex source)
 	{
 		std::vector<int> distance(g.getVertexCount(), INF);
 		distance[0] = 0;
@@ -153,16 +156,9 @@ int main()
 		std::cin >> from >> to >> weight;
 		g.addEdge(from - 1, to - 1, weight);
 	}
-	for (int i : GraphProcessing::FordBellman(g, 0))
+	for (int i : GraphProcessing::findDistances(g, 0))
 	{
-		if (i != -1)
-		{
-			std::cout << i << " ";
-		}
-		else
-		{
-			std::cout << 30000 << " ";
-		}
+		std::cout << ((i != -1) ? i : 30000) << " ";
 	}
 	return 0;
 }
