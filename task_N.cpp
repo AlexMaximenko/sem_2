@@ -53,17 +53,16 @@ int main()
 	size_t n, m;
 	std::cin >> n >> m;
 	DSU dsu(n);
-	size_t answer = 0;
 	for (size_t i = 0; i < m; i++)
 	{
 		size_t from, to;
 		std::cin >> from >> to;
 		dsu.Union(from, to); 
-		if (dsu.getSetsCount() == 1 && answer == 0)
+		if (dsu.getSetsCount() == 1)
 		{
-			answer = i;
+			std::cout << i + 1;
+			return 0;
 		}
 	}
-	std::cout << answer + 1;
 	return 0;
 }
