@@ -1,40 +1,35 @@
 #include<iostream>
 #include<vector>
 #include<map>
+template<class T>
 class DSU
 {
 public:
-	DSU(size_t n)
+	DSU(const std::vector<T>& elements)
 	{
-		set_ = std::vector<size_t>(n);
-		size_ = std::vector<size_t>(n, 1);
-		sets_count_ = n;
-		for (size_t i = 0; i < n; i++)
+		for (size_t i = 0; i < elements.size(); i++)
 		{
-			set_[i] = i;
+			prev_[elements[i]] = elements[i];
+			size_[elements[i]] = 1;
 		}
+		sets_count_ = elements.size();
 	}
-	size_t findSet(size_t x)
+	T findSet(const T& x)
 	{
-		if (x == set_[x])
-		{
-			return x;
-		}
-		set_[x] = findSet(set_[x]);
-		return set_[x];
+		return x == prev_[x] ? x : prev_[x] = findSet(prev_[x]);
 	}
-	void Union(size_t x, size_t y)
+	void Union(const T& x, const T& y)
 	{
-		x = findSet(x);
-		y = findSet(y);
-		if (x != y)
+		T prev_x = findSet(x);
+		T prev_y = findSet(y);
+		if (prev_x != prev_y)
 		{
-			if (size_[x] == size_[y])
+			if (size_[prev_x] == size_[prev_y])
 			{
-				std::swap(x, y);
+				std::swap(prev_x, prev_y);
 			}
-			set_[y] = x;
-			size_[x] += size_[y];
+			prev_[prev_y] = prev_x;
+			size_[prev_x] += size_[prev_y];
 			sets_count_--;
 		}
 	}
@@ -43,8 +38,8 @@ public:
 		return sets_count_;
 	}
 private:
-	std::map<T, size_t> set_;
-	std::map<T, T> size_;
+	std::map<T, size_t> size_;
+	std::map<T, T> prev_;
 	size_t sets_count_;
 };
 
@@ -52,12 +47,17 @@ int main()
 {
 	size_t n, m;
 	std::cin >> n >> m;
-	DSU dsu(n);
+	std::vector<size_t> elements;
+	for (size_t i = 0; i < n; i++)
+	{
+		elements.push_back(i);
+	}
+	DSU<size_t> dsu(elements);
 	for (size_t i = 0; i < m; i++)
 	{
 		size_t from, to;
 		std::cin >> from >> to;
-		dsu.Union(from, to); 
+		dsu.Union(from, to);
 		if (dsu.getSetsCount() == 1)
 		{
 			std::cout << i + 1;
