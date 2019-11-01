@@ -1,6 +1,57 @@
 #include<iostream>
 #include<vector>
 #include<algorithm>
+#include<map>
+template<class T>
+class DSU
+{
+public:
+	DSU(const std::vector<T>& elements)
+	{
+		for (size_t i = 0; i < elements.size(); i++)
+		{
+			prev_[elements[i]] = elements[i];
+			size_[elements[i]] = 1;
+		}
+		sets_count_ = elements.size();
+	}
+	DSU(size_t n)
+	{
+		for (size_t i = 0; i < n; i++)
+		{
+			prev_[i] = i;
+			size_[i] = 0;
+		}
+		sets_count_ = n;
+	}
+	T findSet(const T& x)
+	{
+		return x == prev_[x] ? x : prev_[x] = findSet(prev_[x]);
+	}
+	void Union(const T& x, const T& y)
+	{
+		T prev_x = findSet(x);
+		T prev_y = findSet(y);
+		if (prev_x != prev_y)
+		{
+			if (size_[prev_x] == size_[prev_y])
+			{
+				std::swap(prev_x, prev_y);
+			}
+			prev_[prev_y] = prev_x;
+			size_[prev_x] += size_[prev_y];
+			sets_count_--;
+		}
+	}
+	size_t getSetsCount() const
+	{
+		return sets_count_;
+	}
+private:
+	std::map<T, size_t> size_;
+	std::map<T, T> prev_;
+	size_t sets_count_;
+};
 
 class Edge
 {
@@ -13,7 +64,7 @@ public:
 	}
 	bool operator <(const Edge& second) const
 	{
-		return ((weight_ < second.weight_) /*|| (weight_ == second.weight_ && from_ < second.from_) || (weight_ == second.weight_ && from_ == second.from_ && to_ < second.to_)*/);
+		return ((weight_ < second.weight_));
 	}
 
 	size_t getTo() const
@@ -33,65 +84,96 @@ private:
 	int weight_;
 };
 
-class DSU
+class Graph
 {
 public:
-	DSU(size_t n)
+	typedef size_t Vertex;
+	Graph(size_t vertex_count, bool is_directed = false)
 	{
-		set_ = std::vector<size_t>(n);
-		size_ = std::vector<size_t>(n, 1);
-		sets_count_ = n;
-		for (size_t i = 0; i < n; i++)
+		vertex_count_ = vertex_count;
+		is_directed_ = is_directed;
+	}
+
+	size_t getVertexCount() const
+	{
+		return vertex_count_;
+	}
+
+	size_t geEdgeCount() const
+	{
+		return is_directed_ ? edge_count_ : edge_count_;
+	};
+
+	virtual std::vector<Vertex> getNeighbors(const Vertex& v) const = 0;
+
+	virtual size_t getNeighborsCount(const Vertex& v) const = 0;
+
+	virtual void addEdge(const Vertex& start, const Vertex& finish, const int weight = 0)
+	{
+		edge_count_++;
+	}
+	virtual std::vector<Edge> getEdges() const = 0;
+
+protected:
+	bool is_directed_;
+	size_t vertex_count_,
+		edge_count_;
+};
+
+class GraphAdjList : public Graph
+{
+public:
+	GraphAdjList(const size_t vertex_count, bool is_directed) :
+		Graph(vertex_count, is_directed)
+	{
+		adj_list_ = std::vector<std::vector<Vertex>>(vertex_count);
+	}
+
+	virtual void addEdge(const Vertex& start, const Vertex& finish, const int weight = 1)
+	{
+		Graph::addEdge(start, finish);
+		adj_list_[start].push_back(finish);
+		edges.push_back(Edge(start, finish, weight));
+		if (!is_directed_)
 		{
-			set_[i] = i;
+			adj_list_[finish].push_back(start);
+			edges.push_back(Edge(finish, start, weight));
 		}
 	}
-	size_t findSet(size_t x)
+
+	std::vector<Vertex> getNeighbors(const Vertex& v) const override
 	{
-		if (x == set_[x])
-		{
-			return x;
-		}
-		set_[x] = findSet(set_[x]);
-		return set_[x];
+		return adj_list_[v];
 	}
-	void Union(size_t x, size_t y)
+
+	size_t getNeighborsCount(const Vertex&  v) const override
 	{
-		x = findSet(x);
-		y = findSet(y);
-		if (x != y)
-		{
-			if (size_[x] == size_[y])
-			{
-				std::swap(x, y);
-			}
-			set_[y] = x;
-			size_[x] += size_[y];
-			sets_count_--;
-		}
+		return adj_list_[v].size();
 	}
-	size_t getSetsCount() const
+
+	std::vector<Edge> getEdges() const override
 	{
-		return sets_count_;
+		return edges;
 	}
+
 private:
-	std::vector<size_t> set_;
-	std::vector<size_t> size_;
-	size_t sets_count_;
+	std::vector <std::vector<Vertex>> adj_list_;
+	std::vector<Edge> edges;
 };
 
 namespace GraphProcessing
 {
-	std::vector<Edge> getMinimalSkeleton(std::vector<Edge>& edges, size_t VertexCount)
+	std::vector<Edge> getMST(const Graph& g)
 	{
-		std::vector<Edge> skeleton;
+		std::vector<Edge> spanning_tree;
+		std::vector<Edge> edges = g.getEdges();
 		std::sort(edges.begin(), edges.end());
-		DSU dsu(VertexCount);
+		DSU<Graph::Vertex> dsu(g.getVertexCount());
 		for (Edge edge : edges)
 		{
 			if (dsu.findSet(edge.getFrom()) != dsu.findSet(edge.getTo()))
 			{
-				skeleton.push_back(edge);
+				spanning_tree.push_back(edge);
 				dsu.Union(edge.getFrom(), edge.getTo());
 			}
 			if (dsu.getSetsCount() == 1)
@@ -99,24 +181,25 @@ namespace GraphProcessing
 				break;
 			}
 		}
-		return skeleton;
+		return spanning_tree;
 	}
 }
+
 int main()
 {
 	size_t n, m;
 	std::cin >> n >> m;
+	GraphAdjList g(n, false);
 	std::vector<Edge> edges;
 	for (size_t i = 0; i < m; i++)
 	{
 		size_t to, from;
 		int weight;
 		std::cin >> from >> to >> weight;
-		edges.push_back(Edge(from - 1, to - 1, weight));
+		g.addEdge(from - 1, to - 1, weight);
 	}
-	
 	int weight = 0;
-	for (Edge edge : GraphProcessing::getMinimalSkeleton(edges, n))
+	for (Edge edge : GraphProcessing::getMST(g))
 	{
 		weight += edge.getWeight();
 	}
