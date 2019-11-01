@@ -43,8 +43,8 @@ public:
 		return sets_count_;
 	}
 private:
-	std::vector<size_t> set_;
-	std::vector<size_t> size_;
+	std::map<T, size_t> set_;
+	std::map<T, T> size_;
 	size_t sets_count_;
 };
 
