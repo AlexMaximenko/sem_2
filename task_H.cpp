@@ -3,101 +3,74 @@
 #include<algorithm>
 #include<map>
 #include<queue>
-
-struct field
+struct Cell
 {
-	field()
+	Cell()
 	{
 		x = 0;
 		y = 0;
 	}
-	field(const size_t& x_, const size_t& y_)
+	Cell(const int& x_, const int& y_)
 	{
 		x = x_;
 		y = y_;
 	}
-	field(const field& field_)
+	Cell(const Cell& Cell_)
 	{
-		x = field_.x;
-		y = field_.y;
+		x = Cell_.x;
+		y = Cell_.y;
 	}
-	bool operator <(const field& second) const
+	bool operator <(const Cell& second) const
 	{
-		if (this->x < second.x)
-		{
-			return true;
-		}
-		else
-		{
-			if (this->x == second.x && this->y < second.y)
-			{
-				return true;
-			}
-			return false;
-		}
+		return std::make_pair(x, y) < std::make_pair(second.x, second.y);
 	}
-	bool operator ==(const field& second) const
+	bool operator ==(const Cell& second) const
 	{
-		if (this->x == second.x && this->y == second.y)
-		{
-			return  true;
-		}
-		return false;
+		return std::make_pair(x, y) == std::make_pair(second.x, second.y);
 	}
-	bool operator !=(const field& second) const
+	bool operator !=(const Cell& second) const
 	{
-		if (*this == second)
-		{
-			return false;
-		}
-		return true;
+		return !(*this == second);
 	}
-	std::vector<field> getCorrectNeighbors(const size_t& size) const
-	{
-		std::vector<field> correct_neighbors;
-		if (x >= 2 && y >= 1)
-		{
-			correct_neighbors.push_back({ x - 2, y - 1 });
-		}
-		if (x >= 2 && y + 1 < size)
-		{
-			correct_neighbors.push_back({ x - 2, y + 1 });
-		}
-		if (x + 2 < size && y >= 1)
-		{
-			correct_neighbors.push_back({ x + 2, y - 1 });
-		}
-		if (x + 2 < size && y + 1 < size)
-		{
-			correct_neighbors.push_back({ x + 2, y + 1 });
-		}
-		if (x >= 1 && y >= 2)
-		{
-			correct_neighbors.push_back({ x - 1, y - 2 });
-		}
-		if (x >= 1 && y + 2 < size)
-		{
-			correct_neighbors.push_back({ x - 1, y + 2 });
-		}
-		if (x + 1 < size && y >= 2)
-		{
-			correct_neighbors.push_back({ x + 1, y - 2 });
-		}
-		if (x + 1 < size && y + 2 < size)
-		{
-			correct_neighbors.push_back({ x + 1, y + 2 });
-		}
-		return correct_neighbors;
-	}
-	size_t x;
-	size_t y;
+	int x;
+	int y;
 };
+
+struct KnightMove
+{
+	KnightMove(int x, int y)
+	{
+		dx_ = x;
+		dy_ = y;
+	}
+	std::vector<Cell> getMoves() const
+	{
+		return { {dx_ - 2, dy_ - 1}, {dx_ - 2, dy_ + 1}, {dx_ - 1, dy_ - 2}, {dx_ - 1, dy_ + 2}, {dx_ + 2, dy_ - 1}, {dx_ + 2, dy_ + 1}, {dx_ + 1, dy_ - 2}, {dx_ + 1, dy_ + 2} };
+	}
+
+	int dx_;
+	int dy_;
+};
+
+struct  Desk
+{
+	Desk(int size_x, int size_y)
+	{
+		size_x_ = size_x;
+		size_y_ = size_y;
+	}
+	bool inDesk(int x, int y)
+	{
+		return !(x < 0 || y < 0 || x >= size_x_ || y >= size_y_);
+	}
+	size_t size_x_;
+	size_t size_y_;
+};
+
 class Graph
 {
 public:
-	const size_t NO_EDGE = 0;
-	const size_t IS_EDGE = 1;
-	typedef field Vertex;
+	typedef Cell Vertex;
 	Graph(size_t vertex_count, bool is_directed)
 	{
 		vertex_count_ = vertex_count;
@@ -124,6 +97,8 @@ public:
 	virtual size_t getNeighborsCount(const Vertex&  v) const = 0;
 
 protected:
+	const size_t NO_EDGE = 0;
+	const size_t IS_EDGE = 1;
 	bool is_directed_;
 	size_t vertex_count_,
 		edge_count_;
@@ -160,13 +135,29 @@ public:
 private:
 	std::map<Vertex, std::vector<Vertex>> adj_list_;
 };
+
+std::vector<Cell> correctKnightMoves(Cell cell, size_t size_x, size_t size_y)
+{
+	std::vector<Cell> correct_moves;
+	Desk desk(size_x, size_y);
+	std::vector<Cell> moves = KnightMove(cell.x, cell.y).getMoves();
+	for (Cell i : moves)
+	{
+		if (desk.inDesk(i.x, i.y))
+		{
+			correct_moves.push_back(i);
+		}
+	}
+	return correct_moves;
+}
+
 namespace GraphProcessing
 {
 	enum VertexMark
 	{
 		WHITE, GREY, BLACK
 	};
-	const field WASNT_VISIT(-1, -1);
+	const Cell WASNT_VISIT(-1, -1);
 	const size_t INF = -1;
 	namespace
 	{
@@ -189,9 +180,9 @@ namespace GraphProcessing
 		std::queue<Graph::Vertex> qu;
 		std::map<Graph::Vertex, Graph::Vertex> prev;
 		std::map<Graph::Vertex, size_t> distance;
-		for (size_t i = 0; i < sqrt(g.getVertexCount()); i++)
+		for (size_t i = 0; i < g.getVertexCount(); i++)
 		{
-			for (size_t j = 0; j < sqrt(g.getVertexCount()); j++)
+			for (size_t j = 0; j < g.getVertexCount(); j++)
 			{
 				Graph::Vertex vertex(i, j);
 				distance[vertex] = INF;
@@ -204,7 +195,7 @@ namespace GraphProcessing
 		{
 			Graph::Vertex curr = qu.front();
 			qu.pop();
-			for (Graph::Vertex neighbor : curr.getCorrectNeighbors(g.getVertexCount()))
+			for (Graph::Vertex neighbor : correctKnightMoves(curr, g.getVertexCount(), g.getVertexCount()))
 			{
 				if (distance[neighbor] == INF)
 				{
@@ -225,12 +216,11 @@ namespace GraphProcessing
 	}
 }
 
-
 int main()
 {
 	size_t n;
 	std::cin >> n;
-	GraphAdjList g(n * n, false);
+	GraphAdjList g(n, false);
 	Graph::Vertex start, finish;
 	std::cin >> start.x >> start.y;
 	start.x -= 1;
@@ -243,7 +233,7 @@ int main()
 		for (size_t j = 0; j < n; j++)
 		{
 			Graph::Vertex vertex(i, j);
-			for (Graph::Vertex u : vertex.getCorrectNeighbors(n))
+			for (Graph::Vertex u : correctKnightMoves(vertex, n, n))
 			{
 				g.addEdge(vertex, u);
 			}
@@ -254,7 +244,7 @@ int main()
 	{
 		std::cout << -1;
 	}
-	else 
+	else
 	{
 		std::cout << shortest_way.size() - 1 << std::endl;
 		for (Graph::Vertex vertex : shortest_way)
