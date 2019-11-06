@@ -38,6 +38,30 @@ protected:
 		edge_count_;
 };
 
+struct UndirectedEdge
+{
+	UndirectedEdge(const Graph::Vertex& from, const Graph::Vertex& to)
+	{
+		if (from < to)
+		{
+			from_ = from;
+			to_ = to;
+		}
+		else
+		{
+			from_ = to;
+			to_ = from;
+		}
+	}
+
+	bool operator <(const UndirectedEdge& second) const
+	{
+		return std::make_pair(from_, to_) < std::make_pair(second.from_, second.to_);
+	}
+
+	Graph::Vertex from_, to_;
+};
+
 class GraphAdjList : public Graph
 {
 
@@ -68,18 +92,6 @@ public:
 		return adj_list_[v].size();
 	}
 
-	void printGraph() const
-	{
-		std::cout << "Print\n";
-		std::cout << vertex_count_;
-		for (size_t i = 0; i < vertex_count_; i++)
-		{
-			for (auto k : adj_list_[i])
-				std::cout << k << " ";
-			std::cout << std::endl;
-		}
-	}
-
 private:
 	std::vector<std::vector<Vertex>> adj_list_;
 };
@@ -95,7 +107,7 @@ namespace GraphProcessing
 			WHITE, BLACK, GREY
 		};
 
-		void dfsForBridges(const Vertex& vertex, const Graph& g, size_t& timer, std::vector<VertexMark>& vertex_marks, std::vector<size_t>& discovery_time, std::vector<size_t>& f_up, std::vector<std::pair<Vertex, Vertex>>& answer, const Vertex& parent = 0)
+		void dfsForBridges(const Vertex& vertex, const Graph& g, size_t& timer, std::vector<VertexMark>& vertex_marks, std::vector<size_t>& discovery_time, std::vector<size_t>& f_up, std::vector<UndirectedEdge>& answer, const Vertex& parent = 0)
 		{
 			vertex_marks[vertex] = GREY;
 			discovery_time[vertex] = f_up[vertex] = ++timer;
@@ -115,7 +127,7 @@ namespace GraphProcessing
 				}
 				if (f_up[neighbor] > discovery_time[vertex])
 				{
-					answer.push_back(std::minmax(neighbor + 1, vertex + 1));
+					answer.push_back({ neighbor + 1, vertex + 1 });
 				}
 
 			}
@@ -124,9 +136,9 @@ namespace GraphProcessing
 		}
 	}
 
-	std::vector<std::pair<Vertex, Vertex>> getBridges(const Graph& g)
+	std::vector<UndirectedEdge> getBridges(const Graph& g)
 	{
-		std::vector<std::pair<Vertex, Vertex>> answer;
+		std::vector<UndirectedEdge> answer;
 		const size_t INF = (size_t)(~0);
 		std::vector<size_t> f_up(g.getVertexCount(), INF);
 		std::vector<VertexMark> vertex_marks(g.getVertexCount(), WHITE);
@@ -146,45 +158,40 @@ namespace GraphProcessing
 int main()
 {
 	size_t n, m;
-	std::map<std::pair<size_t, size_t>, int> edges;
+	std::map<UndirectedEdge, int> edge_number;
+	std::map<UndirectedEdge, bool> is_multiedge;
 	std::cin >> n >> m;
 	GraphAdjList g(n, false);
 	for (size_t i = 0; i < m; i++)
 	{
 		size_t to, from;
 		std::cin >> to >> from;
-		if (edges.find(std::minmax(from, to)) == edges.end())
+		if (edge_number.find({ from, to }) == edge_number.end())
 		{
-			edges[std::minmax(from, to)] = i + 1;
+			edge_number[{from, to}] = i + 1;
 			g.addEdge(from - 1, to - 1);
 		}
 		else
 		{
-			edges[std::minmax(from, to)] = -1;
+			is_multiedge[{from, to}] = true;
 		}
 	}
-	std::vector<std::pair<size_t, size_t>> bridges = GraphProcessing::getBridges(g);
+	std::vector<UndirectedEdge> bridges = GraphProcessing::getBridges(g);
 	size_t number_of_bridges = 0;
-	if (bridges.size())
+	std::vector<size_t> answer;
+	for (auto i : bridges)
 	{
-		std::set<size_t> answer;
-		for (auto i : bridges)
+		if (!is_multiedge[i])
 		{
-			if (edges[i] != -1)
-			{
-				number_of_bridges++;
-				answer.insert(edges[i]);
-			}
-		}
-		std::cout << number_of_bridges << "\n";
-		for (auto i : answer)
-		{
-			std::cout << i << " ";
+			number_of_bridges++;
+			answer.push_back(edge_number[i]);
 		}
 	}
-	else
+	std::sort(answer.begin(), answer.end());
+	std::cout << number_of_bridges << "\n";
+	for (size_t i : answer)
 	{
-		std::cout << 0;
+		std::cout << i << " ";
 	}
 	return 0;
 }
