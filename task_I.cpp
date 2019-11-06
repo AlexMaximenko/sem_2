@@ -71,50 +71,50 @@ private:
 	std::vector<std::vector<Vertex>> adj_list_;
 };
 
-namespace GraphProcessing
+namespace GamePocessing
 {
-
-	typedef size_t Vertex;
-	enum VertexMark
+	std::vector<size_t> getPossibleNumbers(size_t current_number)
 	{
-		WHITE, BLACK, GREY
-	};
-	const size_t WASNT_VISIT = -1;
-	const size_t INF = -1;
-
-	void addNeighbors(Graph& g, const size_t& vertex)
-	{
-		std::vector<size_t> neighbors;
-		size_t a_1 = vertex / 1000;
-		size_t a_2 = (vertex % 1000) / 100;
-		size_t a_3 = (vertex % 100) / 10;
-		size_t a_4 = vertex % 10;
+		std::vector<size_t> possible_numbers;
+		size_t a_1 = current_number / 1000;
+		size_t a_2 = (current_number % 1000) / 100;
+		size_t a_3 = (current_number % 100) / 10;
+		size_t a_4 = current_number % 10;
 		if (a_1 != 9)
 		{
-			g.addEdge(vertex, vertex + 1000);
+			possible_numbers.push_back(current_number + 1000);
 		}
 		if (a_4 != 1)
 		{
-			g.addEdge(vertex, vertex - 1);
+			possible_numbers.push_back(current_number - 1);
 		}
-		g.addEdge(vertex, a_2 * 1000 + a_3 * 100 + a_4 * 10 + a_1);
-		g.addEdge(vertex, a_4 * 1000 + a_1 * 100 + a_2 * 10 + a_3);
+		possible_numbers.push_back(a_2 * 1000 + a_3 * 100 + a_4 * 10 + a_1);
+		possible_numbers.push_back(a_4 * 1000 + a_1 * 100 + a_2 * 10 + a_3);
+		return possible_numbers;
 	}
-
-	std::vector<Graph::Vertex> getWay(const std::vector<Graph::Vertex>& prev, const Graph::Vertex& finish)
+}
+namespace GraphProcessing
+{
+	namespace
 	{
-		std::vector<Graph::Vertex> way;
-		Graph::Vertex curr = finish;
-		while (prev[curr] != WASNT_VISIT)
+		const size_t WASNT_VISIT = -1;
+		const size_t INF = -1;
+
+		std::vector<Graph::Vertex> getWay(const std::vector<Graph::Vertex>& prev, const Graph::Vertex& finish)
 		{
+			std::vector<Graph::Vertex> way;
+			Graph::Vertex curr = finish;
+			while (prev[curr] != WASNT_VISIT)
+			{
+				way.push_back(curr);
+				curr = prev[curr];
+			}
 			way.push_back(curr);
-			curr = prev[curr];
+			std::reverse(way.begin(), way.end());
+			return way;
 		}
-		way.push_back(curr);
-		std::reverse(way.begin(), way.end());
-		return way;
 	}
-	std::vector<size_t> getShortestCombination(Graph& g, const Graph::Vertex& start, const Graph::Vertex& finish)
+	std::vector<size_t> getShortestWay(Graph& g, const Graph::Vertex& start, const Graph::Vertex& finish)
 	{
 		std::vector<Graph::Vertex> prev(g.getVertexCount(), WASNT_VISIT);
 		std::vector<size_t> distance(g.getVertexCount(), INF);
@@ -125,7 +125,6 @@ namespace GraphProcessing
 		{
 			Graph::Vertex curr = qu.front();
 			qu.pop();
-			addNeighbors(g, curr);
 			for (Graph::Vertex neighbor : g.getNeighbors(curr))
 			{
 				if (distance[neighbor] == WASNT_VISIT)
@@ -146,8 +145,14 @@ int main()
 	size_t n, m;
 	std::cin >> n >> m;
 	GraphAdjList g(10000, true);
-	GraphProcessing::addNeighbors(g, n);
-	std::vector<Graph::Vertex> combination = GraphProcessing::getShortestCombination(g, n, m);
+	for (size_t i = 1000; i < 10000; i++)
+	{
+		for (Graph::Vertex j : GamePocessing::getPossibleNumbers(i))
+		{
+			g.addEdge(i, j);
+		}
+	}
+	std::vector<Graph::Vertex> combination = GraphProcessing::getShortestWay(g, n, m);
 	for (Graph::Vertex v : combination)
 	{
 		std::cout << v << std::endl;
