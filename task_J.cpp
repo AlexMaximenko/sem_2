@@ -52,7 +52,7 @@ struct field
 		}
 		return true;
 	}
-	std::vector<field> getCorrectNeighbors(const size_t& size_x, const size_t& size_y) const
+	std::vector<field> getSideNeighbors(const size_t& size_x, const size_t& size_y) const
 	{
 		std::vector<field> correct_neighbors;
 		if (x >= 1)
@@ -153,24 +153,21 @@ namespace GraphProcessing
 	const field WASNT_VISIT(-1, -1);
 	const size_t INF = -1;
 
-	std::vector<std::vector<size_t>> getTable(const Graph& g, const std::vector<std::vector<size_t>>& input_table)
+	std::map<Graph::Vertex, size_t> getDistances(const Graph& g, const std::vector<field>& sources, size_t size_x, size_t size_y)
 	{
-		size_t size_x = input_table.size();
-		size_t size_y = input_table[0].size();
 		std::map<Graph::Vertex, size_t> distance;
-		std::vector<std::vector<size_t>> output_table(size_x, std::vector<size_t>(size_y, 0));
 		std::queue<Graph::Vertex> qu;
 		for (size_t i = 0; i < size_x; i++)
 		{
 			for (size_t j = 0; j < size_y; j++)
 			{
 				distance[{i, j}] = INF;
-				if (input_table[i][j] == 1) // putting cells with a value of 1 at the top of the queue
-				{
-					distance[{i, j}] = 0;
-					qu.push({ i,j });
-				}
 			}
+		}
+		for (field i : sources)
+		{
+			distance[i] = 0;
+			qu.push(i);
 		}
 		while (!qu.empty())
 		{
@@ -185,42 +182,71 @@ namespace GraphProcessing
 				}
 			}
 		}
+		return distance;
+	}
+}
+struct Table
+{
+	Table(size_t size_x_, size_t size_y_)
+	{
+		size_x = size_x_;
+		size_y = size_y_;
+		table = std::vector<std::vector<size_t>>(size_x, std::vector<size_t>(size_y, 0));
+	}
+	Table getDistancesTable() const
+	{
+		Table distance_table(size_x, size_y);
+		GraphAdjList g(size_x * size_y, false);
+		std::vector<field> sources;
 		for (size_t i = 0; i < size_x; i++)
 		{
 			for (size_t j = 0; j < size_y; j++)
 			{
-				output_table[i][j] = distance[{i, j}];
+				if (table[i][j] == 1)
+				{
+					sources.push_back({ i, j });
+				}
+				Graph::Vertex vertex(i, j);
+				for (Graph::Vertex neighbor : vertex.getSideNeighbors(size_x, size_y))
+				{
+					g.addEdge(vertex, neighbor);
+				}
 			}
 		}
-		return output_table;
+		std::map<field, size_t> distances = GraphProcessing::getDistances(g, sources, size_x, size_y);
+		for (size_t i = 0; i < size_x; i++)
+		{
+			for (size_t j = 0; j < size_y; j++)
+			{
+				distance_table.table[i][j] = distances[{i, j}];
+			}
+		}
+		return distance_table;
 	}
-}
+
+	std::vector<std::vector<size_t>> table;
+	size_t size_x, size_y;
+};
 
 
 int main()
 {
 	size_t n, m;
 	std::cin >> n >> m;
-	std::vector<std::vector<size_t>> input_table(n, std::vector<size_t>(m, 0));
-	GraphAdjList g(n*m, false);
+	Table t(n, m);
 	for (size_t i = 0; i < n; i++)
 	{
 		for (size_t j = 0; j < m; j++)
 		{
-			std::cin >> input_table[i][j];
-			Graph::Vertex vertex(i, j);
-			for (Graph::Vertex neighbor : vertex.getCorrectNeighbors(n, m))
-			{
-				g.addEdge(vertex, neighbor);
-			}
+			std::cin >> t.table[i][j];
 		}
 	}
-	std::vector<std::vector<size_t>> output_table = GraphProcessing::getTable(g, input_table);
+	Table output_table = t.getDistancesTable();
 	for (size_t i = 0; i < n; i++)
 	{
 		for (size_t j = 0; j < m; j++)
 		{
-			std::cout << output_table[i][j] << " ";
+			std::cout << output_table.table[i][j] << " ";
 		}
 		std::cout << std::endl;
 	}
