@@ -68,29 +68,9 @@ public:
 		return adj_list_[v].size();
 	}
 
-	void printGraph() const
-	{
-		std::cout << "Print\n";
-		std::cout << vertex_count_;
-		for (size_t i = 0; i < vertex_count_; i++)
-		{
-			for (auto k : adj_list_[i])
-				std::cout << k << " ";
-			std::cout << std::endl;
-		}
-	}
-
 private:
 	std::vector<std::vector<Vertex>> adj_list_;
 };
-
-template<class T>
-void print_vector(const std::vector<T>& vector)
-{
-	for (auto i : vector)
-		std::cout << i << " ";
-	std::cout << "\n";
-}
 
 namespace GraphProcessing
 {
@@ -101,52 +81,52 @@ namespace GraphProcessing
 			WHITE, BLACK, GREY
 		};
 
-		void dfsForBridges(const Graph::Vertex& vertex, const Graph& g, size_t& timer, std::vector<VertexMark>& vertex_marks, std::vector<size_t>& discovery_time, std::vector<size_t>& f_up, std::set<Graph::Vertex>& answer, bool is_root)
+		void dfsForArticulaitonPoints(const Graph::Vertex& vertex, const Graph& g, size_t& timer, std::vector<VertexMark>& vertex_marks, std::vector<size_t>& entry_time, std::vector<size_t>& f_up, std::vector<Graph::Vertex>& answer, bool is_root)
 		{
 			vertex_marks[vertex] = GREY;
-			discovery_time[vertex] = f_up[vertex] = ++timer;
+			entry_time[vertex] = f_up[vertex] = ++timer;
 			size_t children = 0;
 			for (Graph::Vertex neighbor : g.getNeighbors(vertex))
 			{
 				if ((vertex_marks[neighbor] == GREY))
 				{
-					f_up[vertex] = std::min(f_up[vertex], discovery_time[neighbor]);
+					f_up[vertex] = std::min(f_up[vertex], entry_time[neighbor]);
 				}
 				else
 				{
 					if (vertex_marks[neighbor] == WHITE)
 					{
 						children++;
-						dfsForBridges(neighbor, g, timer, vertex_marks, discovery_time, f_up, answer, false);
+						dfsForArticulaitonPoints(neighbor, g, timer, vertex_marks, entry_time, f_up, answer, false);
 						f_up[vertex] = std::min(f_up[vertex], f_up[neighbor]);
-						if ((f_up[neighbor] >= discovery_time[vertex]) && (!is_root))
+						if ((f_up[neighbor] >= entry_time[vertex]) && (!is_root))
 						{
-							answer.insert(vertex + 1);
+							answer.push_back(vertex);
 						}
 					}
 				}
 			}
 			if ((is_root) && (children > 1))
 			{
-				answer.insert(vertex + 1);
+				answer.push_back(vertex);
 			}
 			vertex_marks[vertex] = BLACK;
 		}
 	}
 
-	std::set<Graph::Vertex> getArticulationPoints(const Graph& g)
+	std::vector<Graph::Vertex> getArticulationPoints(const Graph& g)
 	{
-		std::set<Graph::Vertex> answer;
+		std::vector<Graph::Vertex> answer;
 		const size_t INF = -1;
 		std::vector<size_t> f_up(g.getVertexCount(), INF);
 		std::vector<VertexMark> vertex_marks(g.getVertexCount(), WHITE);
-		std::vector<size_t> discovery_time(g.getVertexCount(), INF);
+		std::vector<size_t> entry_time(g.getVertexCount(), INF);
 		size_t timer = 0;
 		for (Graph::Vertex vertex = 0; vertex < g.getVertexCount(); vertex++)
 		{
 			if (vertex_marks[vertex] == WHITE)
 			{
-				dfsForBridges(vertex, g, timer, vertex_marks, discovery_time, f_up, answer, true);
+				dfsForArticulaitonPoints(vertex, g, timer, vertex_marks, entry_time, f_up, answer, true);
 			}
 		}
 		return answer;
@@ -156,7 +136,6 @@ namespace GraphProcessing
 int main()
 {
 	size_t n, m;
-	std::map<std::pair<size_t, size_t>, int> edges;
 	std::cin >> n >> m;
 	GraphAdjList g(n, false);
 	for (size_t i = 0; i < m; i++)
@@ -165,14 +144,14 @@ int main()
 		std::cin >> to >> from;
 		g.addEdge(from - 1, to - 1);
 	}
-	std::set<size_t> articulation_points = GraphProcessing::getArticulationPoints(g);
+	std::vector<Graph::Vertex> articulation_points = GraphProcessing::getArticulationPoints(g);
+	std::sort(articulation_points.begin(), articulation_points.end());
+	articulation_points.erase(std::unique(articulation_points.begin(), articulation_points.end()), articulation_points.end());
 	std::cout << articulation_points.size() << "\n";
-	if (articulation_points.size() > 0)
+	for (Graph::Vertex i : articulation_points)
 	{
-		for (Graph::Vertex i : articulation_points)
-		{
-			std::cout << i << "\n";
-		}
+		std::cout << i + 1 << "\n";
+
 	}
 	return 0;
 }
