@@ -3,6 +3,7 @@
 #include<algorithm>
 #include<map>
 #include<queue>
+#include<set>
 struct Cell
 {
 	Cell()
@@ -38,23 +39,19 @@ struct Cell
 
 struct KnightMove
 {
-	KnightMove(int x, int y)
+	KnightMove()
 	{
-		dx_ = x;
-		dy_ = y;
 	}
 	std::vector<Cell> getMoves() const
 	{
-		return { {dx_ - 2, dy_ - 1}, {dx_ - 2, dy_ + 1}, {dx_ - 1, dy_ - 2}, {dx_ - 1, dy_ + 2}, {dx_ + 2, dy_ - 1}, {dx_ + 2, dy_ + 1}, {dx_ + 1, dy_ - 2}, {dx_ + 1, dy_ + 2} };
+		return { {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {2, -1}, {2, 1}, {1, -2}, {1, 2} };
 	}
 
-	int dx_;
-	int dy_;
 };
 
 struct  Desk
 {
-	Desk(int size_x, int size_y)
+	Desk(size_t size_x, size_t size_y)
 	{
 		size_x_ = size_x;
 		size_y_ = size_y;
@@ -94,6 +91,8 @@ public:
 		edge_count_++;
 	}
 
+	virtual std::vector<Vertex> getVertices() const = 0;
+
 	virtual size_t getNeighborsCount(const Vertex&  v) const = 0;
 
 protected:
@@ -120,6 +119,7 @@ public:
 		{
 			adj_list_[finish].push_back(start);
 		}
+		vertices_.insert(start);
 	}
 
 	std::vector<Vertex> getNeighbors(const Vertex& v) const override
@@ -132,20 +132,31 @@ public:
 		return adj_list_.at(v).size();
 	}
 
+	std::vector<Vertex> getVertices() const override
+	{
+		std::vector<Vertex> vertices;
+		for (Vertex i : vertices_)
+		{
+			vertices.push_back(i);
+		}
+		return vertices;
+	}
+
 private:
 	std::map<Vertex, std::vector<Vertex>> adj_list_;
+	std::set<Vertex> vertices_;
 };
 
-std::vector<Cell> correctKnightMoves(Cell cell, size_t size_x, size_t size_y)
+std::vector<Cell> correctKnightMoves(Cell cell, Desk desk)
 {
 	std::vector<Cell> correct_moves;
-	Desk desk(size_x, size_y);
-	std::vector<Cell> moves = KnightMove(cell.x, cell.y).getMoves();
+	std::vector<Cell> moves = KnightMove().getMoves();
 	for (Cell i : moves)
 	{
-		if (desk.inDesk(i.x, i.y))
+		if (desk.inDesk(cell.x + i.x, cell.y + i.y))
 		{
-			correct_moves.push_back(i);
+			Cell correct_move = { cell.x + i.x, cell.y + i.y };
+			correct_moves.push_back(correct_move);
 		}
 	}
 	return correct_moves;
@@ -180,14 +191,10 @@ namespace GraphProcessing
 		std::queue<Graph::Vertex> qu;
 		std::map<Graph::Vertex, Graph::Vertex> prev;
 		std::map<Graph::Vertex, size_t> distance;
-		for (size_t i = 0; i < g.getVertexCount(); i++)
+		for (Graph::Vertex vertex : g.getVertices())
 		{
-			for (size_t j = 0; j < g.getVertexCount(); j++)
-			{
-				Graph::Vertex vertex(i, j);
-				distance[vertex] = INF;
-				prev[vertex] = WASNT_VISIT;
-			}
+			distance[vertex] = INF;
+			prev[vertex] = WASNT_VISIT;
 		}
 		distance[start] = 0;
 		qu.push(start);
@@ -195,7 +202,7 @@ namespace GraphProcessing
 		{
 			Graph::Vertex curr = qu.front();
 			qu.pop();
-			for (Graph::Vertex neighbor : correctKnightMoves(curr, g.getVertexCount(), g.getVertexCount()))
+			for (Graph::Vertex neighbor : correctKnightMoves(curr, Desk(g.getVertexCount(), g.getVertexCount())))
 			{
 				if (distance[neighbor] == INF)
 				{
@@ -205,14 +212,7 @@ namespace GraphProcessing
 				}
 			}
 		}
-		if (distance[finish] == INF)
-		{
-			return  std::vector<Graph::Vertex>(0);
-		}
-		else
-		{
-			return getWay(prev, finish);
-		}
+		return distance[finish] == INF ? std::vector<Graph::Vertex>(0) : getWay(prev, finish);
 	}
 }
 
@@ -233,7 +233,7 @@ int main()
 		for (size_t j = 0; j < n; j++)
 		{
 			Graph::Vertex vertex(i, j);
-			for (Graph::Vertex u : correctKnightMoves(vertex, n, n))
+			for (Graph::Vertex u : correctKnightMoves(vertex, Desk(n, n)))
 			{
 				g.addEdge(vertex, u);
 			}
@@ -254,3 +254,4 @@ int main()
 	}
 	return 0;
 }
+
