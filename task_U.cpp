@@ -1,168 +1,189 @@
 #include<iostream>
 #include<vector>
-#include<map>
-#include<set>
-#include<algorithm>
-
-class Edge
+#include<random>
+#include<ctime>
+template<class T>
+struct Node
 {
-public:
-	Edge(size_t from, size_t to, int weight)
-	{
-		from_ = from;
-		to_ = to;
-		weight_ = weight;
-	}
-	bool operator <(const Edge& second) const
-	{
-		return ((weight_ < second.weight_));
-	}
+	Node() = default;
+	Node(const T& key) : key(key), priority(rand()), summ(key)
+	{}
+	T key;
+	int priority;
+	int size = 0;
+	T summ = 0;
+	Node* left = nullptr;
+	Node* right = nullptr;
+};
 
-	size_t getTo() const
-	{
-		return to_;
-	}
-	size_t getFrom() const
-	{
-		return from_;
-	}
-	size_t getWeight() const
-	{
-		return weight_;
-	}
+
+template<class T>
+class Treap
+{
 private:
-	size_t from_, to_;
-	int weight_;
-};
 
-class Graph
-{
-public:
-	typedef size_t Vertex;
-	Graph(size_t vertex_count, bool is_directed = false)
+	//std::mt19937 random_generator_;
+
+	mutable Node<T>* root_ = nullptr;
+
+	/*int generatePriority()
 	{
-		vertex_count_ = vertex_count;
-		is_directed_ = is_directed;
+		return random_generator_();
+	}*/
+
+	T getSize(Node<T>* &current_node)
+	{
+		return current_node == nullptr ? 0 : current_node->summ;
 	}
 
-	size_t getVertexCount() const
+	void resize(Node<T>* &current_node)
 	{
-		return vertex_count_;
+		current_node->size = 1 + getSize(current_node->left) + getSize(current_node->right);
+		current_node->summ = getSum(current_node->left) + getSum(current_node->right) + current_node->key;
 	}
 
-	size_t geEdgeCount() const
+	Node<T>* merge(Node<T>* left_node, Node<T>* right_node)
 	{
-		return is_directed_ ? edge_count_ : edge_count_;
-	};
-
-	virtual std::vector<Vertex> getNeighbors(const Vertex& v) const = 0;
-
-	virtual size_t getNeighborsCount(const Vertex& v) const = 0;
-
-	virtual void addEdge(const Vertex& start, const Vertex& finish, const int weight = 0)
-	{
-		edge_count_++;
-	}
-	virtual std::vector<Edge> getEdges() const = 0;
-
-protected:
-	bool is_directed_;
-	size_t vertex_count_,
-		edge_count_;
-};
-
-
-class GraphAdjList : public Graph
-{
-public:
-	GraphAdjList(const size_t vertex_count, bool is_directed) :
-		Graph(vertex_count, is_directed)
-	{
-		adj_list_ = std::vector<std::vector<Vertex>>(vertex_count);
-	}
-
-	virtual void addEdge(const Vertex& start, const Vertex& finish, const int weight = 1)
-	{
-		Graph::addEdge(start, finish);
-		adj_list_[start].push_back(finish);
-		edges.push_back(Edge(start, finish, weight));
-		if (!is_directed_)
+		if (left_node == nullptr || right_node == nullptr)
 		{
-			adj_list_[finish].push_back(start);
-			edges.push_back(Edge(finish, start, weight));
+			return (left_node != nullptr) ? left_node : right_node;
 		}
-	}
-
-	std::vector<Vertex> getNeighbors(const Vertex& v) const override
-	{
-		return adj_list_[v];
-	}
-
-	size_t getNeighborsCount(const Vertex&  v) const override
-	{
-		return adj_list_[v].size();
-	}
-
-	std::vector<Edge> getEdges() const override
-	{
-		return edges;
-	}
-
-private:
-	std::vector <std::vector<Vertex>> adj_list_;
-	std::vector<Edge> edges;
-};
-namespace GraphProcessing
-{
-	namespace
-	{
-		const size_t INF = -1;
-		void Relax(const Edge& edge, std::vector<int>& distance_curr, std::vector<int>& distance_prev, std::vector<size_t>& way_length)
+		else
 		{
-			if (distance_curr[edge.getTo()] > distance_prev[edge.getFrom()] + edge.getWeight())
+			if (left_node->priority >= right_node->priority)
 			{
-				way_length[edge.getTo()] = way_length[edge.getFrom()] + 1;
-				distance_curr[edge.getTo()] = distance_prev[edge.getFrom()] + edge.getWeight();
+				left_node->right = merge(left_node->right, right_node);
+				resize(left_node);
+				return left_node;
+			}
+			else
+			{
+				right_node->left = merge(left_node, right_node->left);
+				resize(right_node);
+				return right_node;
 			}
 		}
 	}
-	std::vector<int> findDistances(const Graph& g, Graph::Vertex source, size_t max_way_length)
+
+	void split(Node<T>* current_node, const T& key, Node<T>* &left, Node<T>* &right)
 	{
-		std::vector<int> distance_curr(g.getVertexCount(), INF);
-		std::vector<int> distance_prev(g.getVertexCount(), INF);
-		std::vector<size_t> way_length_curr(g.getVertexCount(), 0);
-		std::vector<size_t> way_length_prev(g.getVertexCount(), 0);
-		distance_curr[source] = 0;
-		distance_prev[source] = 0;
-		for (size_t current_length = 0; current_length < max_way_length; current_length++)
+		if (current_node == nullptr)
 		{
-			for (Edge edge : g.getEdges())
-			{
-				if (distance_prev[edge.getFrom()] != INF && way_length_prev[edge.getFrom()] <= current_length)
-				{
-					Relax(edge, distance_curr, distance_prev, way_length_curr);
-				}
-			}
-			distance_prev = distance_curr;
-			way_length_prev = way_length_curr;
+			left = right = nullptr;
 		}
-		return distance_curr;
+		else
+		{
+			if (key >= current_node->key)
+			{
+				split(current_node->right, key, current_node->right, right);
+				left = current_node;
+			}
+			else
+			{
+				split(current_node->left, key, left, current_node->left);
+				right = current_node;
+			}
+		}
+		resize(current_node);
 	}
 
-}
+public:
+	Treap() = default;
 
-int main()
-{
-	size_t n, m, k, s, f;
-	std::cin >> n >> m >> k >> s >> f;
-	GraphAdjList g(n, true);
-	for (size_t i = 0; i < m; i++)
+	void insert(const T& key)
 	{
-		size_t from, to;
-		int weight;
-		std::cin >> from >> to >> weight;
-		g.addEdge(from - 1, to - 1, weight);
+		if (findElement(key, root_))
+		{
+			return;
+		}
+		Node<T> *left, *right;
+		split(root_, key, left, right);
+		Node<T>* new_node = new Node<T>(key);
+		root_ = merge(merge(left, new_node), right);
 	}
-	std::cout << GraphProcessing::findDistances(g, s - 1, k)[f - 1];
-	return 0;
+
+	bool findElement(const T& key) const
+	{
+		return findElement(key, root_);
+	}
+
+	bool findElement(const T& key, Node<T>* current_node) const
+	{
+		if (current_node == nullptr)
+		{
+			return false;
+		}
+		if (key == current_node->key)
+		{
+			return true;
+		}
+		else
+		{
+			if (key < current_node->key)
+			{
+				return findElement(key, current_node->left);
+			}
+			else
+			{
+				return findElement(key, current_node->right);
+			}
+		}
+	}
+
+	int64_t getSum(Node<T>* &current_node) 
+	{
+		return (current_node == nullptr) ? 0 : current_node->sum;
+	}
+
+	int64_t sum(size_t start, size_t finish)
+	{
+		return sum(root_, start, finish);
+	}
+
+	int64_t sum(Node<T>* &current_node, size_t start, size_t finish)
+	{
+		Node<T> *temp_left, *temp_right;
+		Node<T> *left, *right;
+		split(root_, finish, temp_left, temp_right);
+		split(temp_left, start - 1, left, right);
+		int64_t result = get_sum(right);
+		root_ = merge(merge(left, right), temp_right);
+		return result;
+	}
+};
+
+int main() {
+	Treap<int64_t> tree;
+	char cmd;
+	int n, x, y;
+	long long sum_x_y;
+	int request_number = 1;
+	std::ios_base::sync_with_stdio(false);
+	std::cin.tie(NULL);
+	std::cin >> n;
+	for (int i = 0; i < n; ++i) {
+		std::cin >> cmd;
+		switch (cmd) {
+		case '+':
+		{
+			std::cin >> x;
+			if (request_number == 1) {
+				tree.insert(x);
+			}
+			else {
+				tree.insert((x + sum_x_y) % 1000000000);
+			}
+			request_number = 1;
+			break;
+		}
+		case '?':
+		{
+			std::cin >> x >> y;
+			sum_x_y = tree.sum(x, y);
+			std::cout << sum_x_y << '\n';
+			request_number = 2;
+			break;
+		}
+		}
+	}
 }
